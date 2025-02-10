@@ -7,7 +7,6 @@
 - [Architecture & Technical Stack](#architecture--technical-stack)
 - [Directory Structure](#directory-structure)
 - [Data Ingestion, Processing, and Feature Engineering](#data-ingestion-processing-and-feature-engineering)
-- [Machine Learning Model](#machine-learning-model)
 - [Frontend Dashboard](#frontend-dashboard)
 - [API Endpoints](#api-endpoints)
 - [Installation & Setup](#installation--setup)
@@ -96,6 +95,48 @@ The **Bank Statement Analysis & Loan Decision System** is an MVP designed to aut
 - **React.js:** Provides a responsive single-page application.
 - **Visualization:** Uses Plotly for interactive charts.
 - **Communication:** Uses Axios for API calls to the Django backend.
+
+## Directory Structure
+```
+ml_statement_analysis_mvp/
+├── backend/
+│   ├── bank_analysis/
+│   ├── bank_app/
+│   ├── manage.py
+│   ├── requirements.txt
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── README.md
+└── ml/
+    ├── data_processing.py
+    ├── feature_engineering.py
+    ├── model.py
+    ├── utils.py
+```
+
+## Data Ingestion, Processing, and Feature Engineering
+
+1. **Data Ingestion:**
+   - Supports PDF (Camelot with Tesseract OCR fallback), CSV, and Excel.
+2. **Data Cleaning & Preprocessing:**
+   - Standardizes date formats.
+   - Identifies and splits combined columns.
+   - Merges split rows.
+3. **Feature Engineering:**
+   - Computes monthly summaries.
+   - Detects statement-level values.
+   - Identifies recurring transactions.
+  
+## Frontend Dashboard
+
+Provides:
+- **File Upload Interface**
+- **Visualization** with Plotly
+- **Insights Panel**
+- **Loan Decision Indicator**
+- **Transaction Explorer**
 
 ## API Endpoints
 
