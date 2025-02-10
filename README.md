@@ -16,121 +16,86 @@
 ## Project Overview
 
 The **Bank Statement Analysis & Loan Decision System** is an MVP designed to automate the review of bank statements for business loan applications. The system:
-- Extracts and preprocesses data from various bank statement formats (PDF, CSV, Excel).
+- Extracts and preprocesses data from bank statements in various formats (PDF, CSV, Excel).
 - Computes financial insights such as monthly summaries, recurring transactions, and net cash flow.
-- Uses a machine-learning module to generate a loan decision recommendation with a confidence score and explanation.
-- Provides an interactive dashboard for business users to review insights, view visualizations, explore transaction details, and override the ML recommendation with feedback.
-
-This project automates a previously manual process, saving time, reducing human error, and ensuring data-backed decision-making.
+- Uses a machine learning (ML) module to generate a loan decision recommendation (Approved/Rejected) along with a confidence score.
+- Provides an interactive dashboard for business users to review visualizations, analyze transactions, and, if needed, override the ML recommendation with their final decision and remarks.
 
 ## Features
 
 ### Multi-format Data Ingestion:
-- Supports PDF (using Camelot with Tesseract OCR fallback), CSV, and Excel bank statements.
+- Supports PDF (using Camelot with a Tesseract OCR fallback), CSV, and Excel bank statements.
 
 ### Advanced Data Preprocessing:
 - Standardizes date formats.
-- Detects and splits combined columns (e.g., "Date Transaction").
-- Merges rows when transaction details span multiple lines.
+- Detects and splits combined columns (e.g. a "Date Transaction" column into separate date and description fields).
+- Merges rows when a transaction description spans multiple lines.
 
 ### Feature Engineering:
-- Computes monthly summaries (total deposits, total withdrawals, net balance, transaction count).
-- Identifies recurring transactions.
-- Extracts statement-level data (Opening/Closing Balances, Total Debit/Credit) when available.
+- Computes monthly summaries (total deposits, withdrawals, net balance, and transaction count).
+- Extracts statement-level values (Opening/Closing Balances, Total Debits/Credits) when available.
+- Identifies recurring transactions based on identical descriptions across multiple months.
 
 ### Machine Learning Decision Support:
-- Uses a stub ML model (e.g., based on net cash flow) to provide a loan decision recommendation.
-- Returns a confidence score and explanation along with the recommendation.
-- Designed to be extended with a trained model in the future.
+- Uses an ML model (implemented with scikit-learn’s SGDClassifier) that is persisted via pickle.
+- The model extracts a 6-feature vector from the financial insights, consisting of:
+  1. Total deposits (overall)
+  2. Total withdrawals (overall)
+  3. Net overall (deposits minus withdrawals)
+  4. Transaction count
+  5. Average deposit
+  6. Average withdrawal (absolute value)
+- The ML function `predict_loan_approval()` returns a loan decision recommendation (“Approved” or “Rejected”) and a confidence score (probability).
+- There is also an `update_model()` function that incrementally retrains the model using new examples via `partial_fit()`.
 
 ### Interactive Frontend Dashboard:
-- **File Upload Interface:** Users can upload bank statements.
-- **Data Visualization:** Interactive charts (using Plotly) display financial summaries and net balances.
+- **File Upload Interface:** Users can upload bank statements in supported formats.
+- **Data Visualization:** Interactive charts (via Plotly) display monthly financial summaries, including net balance values drawn from statement-level balances (if available).
 - **Insights Panel:** Highlights key metrics and recurring transactions.
-- **Loan Decision Indicator:** Displays the ML-generated recommendation, confidence score, and explanation.
-- **Transaction Explorer:** Provides a drill-down table of individual transactions.
-- **Final Decision Override:** Allows users to submit a final decision and remarks.
+- **Loan Decision Indicator:** Dynamically displays the ML-generated loan recommendation with its confidence score, plus an option for human override.
+- **Transaction Explorer:** Provides a detailed table of individual transactions.
 
 ## Business Logic & Use Cases
 
 ### Business Logic:
-- **Automated Data Extraction:** Extracts transaction details from bank statements regardless of format.
-- **Financial Analysis:** Computes financial metrics such as monthly deposits, withdrawals, and net balances.
-- **Loan Decision:** Evaluates financial insights and provides a recommendation, confidence score, and explanation.
-- **User Override:** Allows human reviewers to submit a final decision.
+- **Automated Data Extraction & Processing:**
+  - The system extracts transaction details from various bank statement formats and cleans the data. It handles common formatting challenges—such as combined columns or multi-row descriptions—ensuring accurate financial data extraction.
+- **Financial Analysis:**
+  - Using the extracted data, the system computes financial insights. When available, it uses statement-level data (like opening/closing balances and total debits/credits) for more accurate analysis. Otherwise, it falls back on aggregating transaction data.
+- **Loan Decision via ML:**
+  - A machine learning model processes the financial insights to generate a loan decision recommendation. The model extracts a feature vector (6 key financial metrics) and returns:
+    - A recommendation (“Approved” or “Rejected”)
+    - A confidence score (e.g., 85%)
+    - (Optionally) An explanation of the decision.
+  - The model is incrementally updatable with new labeled examples.
+- **User Override:**
+  - The dashboard enables a human reviewer to override the ML recommendation with their own final decision and remarks.
 
 ### Use Cases:
-- **Business Loan Assessment:** Automates the review of bank statements for loan applications.
-- **Operational Efficiency:** Reduces manual effort and speeds up decision-making.
+- **Loan Application Review:**
+  - A loan officer uploads a bank statement, and the system automatically processes it, generates insights, and provides a loan recommendation. The officer can review visualizations, inspect detailed transactions, and record a final decision.
+- **Operational Efficiency:**
+  - By automating manual bank statement reviews, the system reduces time, ensures consistency, and enhances decision accuracy.
 
 ## Architecture & Technical Stack
 
 ### Backend:
 - **Django Framework:** Uses Django REST Framework (DRF) for API endpoints.
 - **ML & Data Processing Modules (Python):**
-  - `ml/data_processing.py`: Extracts and preprocesses data.
+  - `ml/data_processing.py`: Extracts and cleans data from bank statements.
   - `ml/feature_engineering.py`: Computes financial insights.
-  - `ml/model.py`: Stub ML model generating loan decisions.
+  - `ml/model.py`: Implements the ML model using scikit-learn’s SGDClassifier and persists it using pickle.
+  - **Key functions:**
+    - `load_model()`: Loads or initializes the model.
+    - `save_model()`: Persists the model to disk.
+    - `extract_features(insights)`: Constructs a 6-feature vector from insights.
+    - `predict_loan_approval(insights)`: Returns a tuple with the recommendation and confidence score.
+    - `update_model(insights, label)`: Incrementally retrains the model with new examples.
 
 ### Frontend:
-- **React.js:** Provides a responsive UI.
+- **React.js:** Provides a responsive single-page application.
 - **Visualization:** Uses Plotly for interactive charts.
-- **API Communication:** Uses Axios for API interaction.
-
-## Directory Structure
-```
-ml_statement_analysis/
-├── backend/
-│   ├── statement_analysis/
-│   ├── bank_app/
-│   ├── manage.py
-│   ├── requirements.txt
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   ├── package.json
-│   └── README.md
-└── ml/
-    ├── data_processing.py
-    ├── feature_engineering.py
-    ├── model.py
-    ├── utils.py
-```
-
-## Data Ingestion, Processing, and Feature Engineering
-
-1. **Data Ingestion:**
-   - Supports PDF (Camelot with Tesseract OCR fallback), CSV, and Excel.
-2. **Data Cleaning & Preprocessing:**
-   - Standardizes date formats.
-   - Identifies and splits combined columns.
-   - Merges split rows.
-3. **Feature Engineering:**
-   - Computes monthly summaries.
-   - Detects statement-level values.
-   - Identifies recurring transactions.
-
-## Machine Learning Model
-
-- **Function:**
-  ```python
-  def predict_loan_approval(features):
-      net = features.get('overall_summary', {}).get('net', 0)
-      if net >= 0:
-          return "Approved", 0.85, "Positive net cash flow and recurring income indicate low risk."
-      else:
-          return "Rejected", 0.85, "Negative net cash flow indicates high risk."
-  ```
-- **Extensibility:** Can be replaced by a trained model.
-
-## Frontend Dashboard
-
-Provides:
-- **File Upload Interface**
-- **Visualization** with Plotly
-- **Insights Panel**
-- **Loan Decision Indicator**
-- **Transaction Explorer**
+- **Communication:** Uses Axios for API calls to the Django backend.
 
 ## API Endpoints
 
@@ -166,3 +131,4 @@ npm start
 1. Upload a bank statement in the React app.
 2. View the dashboard at `/dashboard/<statement_id>`.
 3. Submit final decision feedback.
+
