@@ -65,7 +65,6 @@ The **Bank Statement Analysis & Loan Decision System** is an MVP designed to aut
   - A machine learning model processes the financial insights to generate a loan decision recommendation. The model extracts a feature vector (6 key financial metrics) and returns:
     - A recommendation (“Approved” or “Rejected”)
     - A confidence score (e.g., 85%)
-    - (Optionally) An explanation of the decision.
   - The model is incrementally updatable with new labeled examples.
 - **User Override:**
   - The dashboard enables a human reviewer to override the ML recommendation with their own final decision and remarks.
@@ -100,7 +99,7 @@ The **Bank Statement Analysis & Loan Decision System** is an MVP designed to aut
 ```
 ml_statement_analysis_mvp/
 ├── backend/
-│   ├── bank_analysis/
+│   ├── statement_analysis/
 │   ├── bank_app/
 │   ├── manage.py
 │   ├── requirements.txt
